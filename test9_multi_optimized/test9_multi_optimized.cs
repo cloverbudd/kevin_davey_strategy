@@ -405,6 +405,9 @@ namespace cAlgo
 
         [Parameter("ATR Period", DefaultValue = 14, Group = "Stretch_Exit")]
         public int StretchExitAtrPeriod { get; set; }
+
+        [Parameter("Exit Within (x ATR of MA)", DefaultValue = 0.5, MinValue = 0.0, Step = 0.05, Group = "Stretch_Exit")]
+        public double StretchExitAtrMultiple { get; set; }
         #endregion
 
         #endregion
@@ -415,7 +418,6 @@ namespace cAlgo
         private Dictionary<string, ExitStrategy> _exitStrategies = new Dictionary<string, ExitStrategy>();
         private EntryStrategy _currentEntry;
         private ExitStrategy _currentExit;
-        private int _lastBarIndex = -1;
         private Dictionary<string, int> _positionEntryBars = new Dictionary<string, int>();
         private Dictionary<string, double> _positionStopLossLevels = new Dictionary<string, double>();
         
@@ -523,14 +525,16 @@ namespace cAlgo
         {
             // Check stop loss on EVERY tick (critical for accurate execution)
             CheckStopLossOnTick();
+        }
 
-            // In cTrader, we only check entry/exit signals when a new bar is formed
+        protected override void OnBar()
+        {
+            // OnBar fires when a new bar opens; signals are evaluated on the bar that just closed,
+            // never on the new bar, which holds only its first tick at this point
             int currentBarIndex = Bars.Count - 1;
-            if (currentBarIndex <= _lastBarIndex)
+            int lastIndex = currentBarIndex - 1;
+            if (lastIndex < 1)
                 return;
-            _lastBarIndex = currentBarIndex;
-
-            int lastIndex = currentBarIndex;
 
             // Get parameters (adjusted if market conditions are enabled)
             Dictionary<string, object> entryParams = GetEntryParameters();
@@ -540,7 +544,7 @@ namespace cAlgo
             // Update market conditions and adjust parameters if enabled
             if (UseMarketConditions)
             {
-                UpdateMarketConditions();
+                UpdateMarketConditions(lastIndex);
                 
                 // Auto-switch strategy based on regime if enabled
                 if (AutoSwitchStrategyByRegime)
@@ -697,7 +701,12 @@ namespace cAlgo
         }
 
         private bool ShouldFilterTrade(bool isLong, int index)
-        {            
+        {
+            // The ADX block protects mean-reversion entries from trends; it must not block the
+            // trend-following entry, which only trades when ADX is high
+            if (_currentEntry is TFEMACrossoverEntry)
+                return false;
+
             if (EnableAdxAboveThresholdBlock && _adx != null)
             {
                 double adxValue = _adx.ADX[index];
@@ -794,8 +803,8 @@ namespace cAlgo
             parameters["bb_std"] = BbStdDev;
             
             // MA_Stretch Entry
-            parameters["ma_period"] = MaStretchMaPeriod;
-            parameters["atr_period"] = MaStretchAtrPeriod;
+            parameters["stretch_ma_period"] = MaStretchMaPeriod;
+            parameters["stretch_atr_period"] = MaStretchAtrPeriod;
             parameters["filter_mode"] = MaStretchFilterMode;
             parameters["price_ma_threshold"] = MaStretchPriceMaThreshold;
             parameters["trend_ma_period"] = MaStretchTrendPeriod;
@@ -809,8 +818,8 @@ namespace cAlgo
             parameters["overbought_threshold"] = MrBbOverbought;
             
             // MR_MAReversion Entry
-            parameters["ma_period"] = MrMaPeriod;
-            parameters["ma_type"] = MrMaType.ToString();
+            parameters["mr_ma_period"] = MrMaPeriod;
+            parameters["mr_ma_type"] = MrMaType.ToString();
             
             // MR_StochasticVolume Entry
             parameters["k_period"] = StochKPeriod;
@@ -864,12 +873,13 @@ namespace cAlgo
             parameters["bb_std"] = ExitBbStdDev;
             
             // MA_Exit
-            parameters["ma_period"] = ExitMaPeriod;
-            parameters["ma_type"] = ExitMaType.ToString();
+            parameters["exit_ma_period"] = ExitMaPeriod;
+            parameters["exit_ma_type"] = ExitMaType.ToString();
             
             // Stretch_Exit
-            parameters["ma_period"] = StretchExitMaPeriod;
-            parameters["atr_period"] = StretchExitAtrPeriod;
+            parameters["stretch_exit_ma_period"] = StretchExitMaPeriod;
+            parameters["stretch_exit_atr_period"] = StretchExitAtrPeriod;
+            parameters["stretch_exit_atr_multiple"] = StretchExitAtrMultiple;
             
             return parameters;
         }
@@ -880,10 +890,8 @@ namespace cAlgo
         }
         
         #region Market Condition Methods
-        private void UpdateMarketConditions()
+        private void UpdateMarketConditions(int index)
         {
-            int index = Bars.Count - 1;
-            
             // Calculate volatility (ATR normalized by price)
             double currentVolatility = _atr.Result[index] / Bars.ClosePrices[index];
             // Calculate trend strength (ADX)
@@ -957,11 +965,9 @@ namespace cAlgo
                 parameters["oversold_threshold"] = (int)parameters["oversold_threshold"] + 2;
             if (parameters.ContainsKey("overbought_threshold"))
                 parameters["overbought_threshold"] = (int)parameters["overbought_threshold"] - 2;
-            
-            // Standard MA works well
-            if (parameters.ContainsKey("ma_period"))
-                parameters["ma_period"] = (int)parameters["ma_period"]; // keep as-is
-            
+
+            // Standard MA periods work well - keep as-is
+
             Print("Applied LowVolRanging parameter adjustments");
         }
         
@@ -989,8 +995,12 @@ namespace cAlgo
                 parameters["overbought_threshold"] = Math.Min(95, (int)parameters["overbought_threshold"] + 10);
             
             // Use longer MAs to avoid noise
-            if (parameters.ContainsKey("ma_period"))
-                parameters["ma_period"] = Math.Min(100, (int)parameters["ma_period"] + 10);
+            foreach (string key in new[] { "stretch_ma_period", "mr_ma_period", "exit_ma_period", "stretch_exit_ma_period" })
+            {
+                // Lengthen by 10 up to a cap of 100; periods already above 100 are left alone
+                if (parameters.ContainsKey(key) && (int)parameters[key] < 100)
+                    parameters[key] = Math.Min(100, (int)parameters[key] + 10);
+            }
             
             // For RSI exits, widen targets more to let trend run
             if (parameters.ContainsKey("exit_overbought"))
@@ -1290,8 +1300,8 @@ namespace cAlgo
         
         public override bool CheckLongSignal(Bars bars, int index, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            int atrPeriod = (int)parameters["atr_period"];
+            int maPeriod = (int)parameters["stretch_ma_period"];
+            int atrPeriod = (int)parameters["stretch_atr_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             var atr = Indicators.AverageTrueRange(atrPeriod, MovingAverageType.Simple);
@@ -1303,8 +1313,8 @@ namespace cAlgo
         
         public override bool CheckShortSignal(Bars bars, int index, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            int atrPeriod = (int)parameters["atr_period"];
+            int maPeriod = (int)parameters["stretch_ma_period"];
+            int atrPeriod = (int)parameters["stretch_atr_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             var atr = Indicators.AverageTrueRange(atrPeriod, MovingAverageType.Simple);
@@ -1354,7 +1364,7 @@ namespace cAlgo
         
         public override bool CheckLongSignal(Bars bars, int index, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
+            int maPeriod = (int)parameters["mr_ma_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             // Price crosses below MA and then back above (simplified)
@@ -1363,7 +1373,7 @@ namespace cAlgo
         
         public override bool CheckShortSignal(Bars bars, int index, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
+            int maPeriod = (int)parameters["mr_ma_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             // Price crosses above MA and then back below (simplified)
@@ -1574,8 +1584,8 @@ namespace cAlgo
         
         public override bool CheckLongExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            string maType = (string)parameters["ma_type"];
+            int maPeriod = (int)parameters["exit_ma_period"];
+            string maType = (string)parameters["exit_ma_type"];
             
             MovingAverage ma;
             if (maType == "exponential")
@@ -1588,8 +1598,8 @@ namespace cAlgo
         
         public override bool CheckShortExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            string maType = (string)parameters["ma_type"];
+            int maPeriod = (int)parameters["exit_ma_period"];
+            string maType = (string)parameters["exit_ma_type"];
             
             MovingAverage ma;
             if (maType == "exponential")
@@ -1608,8 +1618,8 @@ namespace cAlgo
         
         public override bool CheckLongExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            int atrPeriod = (int)parameters["atr_period"];
+            int maPeriod = (int)parameters["stretch_exit_ma_period"];
+            int atrPeriod = (int)parameters["stretch_exit_atr_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             var atr = Indicators.AverageTrueRange(atrPeriod, MovingAverageType.Simple);
@@ -1618,15 +1628,16 @@ namespace cAlgo
             double maValue = ma.Result[index];
             double atrValue = atr.Result[index];
             
-            double threshold = 0.5 * (0.004667 * atrPeriod - 0.08667);
+            // Exit once price has reverted to within N ATRs of the MA
+            double threshold = (double)parameters["stretch_exit_atr_multiple"];
             double stretch = Math.Abs(currentPrice - maValue) / atrValue;
             return stretch <= threshold;
         }
-        
+
         public override bool CheckShortExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
         {
-            int maPeriod = (int)parameters["ma_period"];
-            int atrPeriod = (int)parameters["atr_period"];
+            int maPeriod = (int)parameters["stretch_exit_ma_period"];
+            int atrPeriod = (int)parameters["stretch_exit_atr_period"];
             
             var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, maPeriod);
             var atr = Indicators.AverageTrueRange(atrPeriod, MovingAverageType.Simple);
@@ -1634,8 +1645,9 @@ namespace cAlgo
             double currentPrice = bars.ClosePrices[index];
             double maValue = ma.Result[index];
             double atrValue = atr.Result[index];
-            
-            double threshold = 0.5 * (0.004667 * atrPeriod - 0.08667);
+
+            // Exit once price has reverted to within N ATRs of the MA
+            double threshold = (double)parameters["stretch_exit_atr_multiple"];
             double stretch = Math.Abs(currentPrice - maValue) / atrValue;
             return stretch <= threshold;
         }
