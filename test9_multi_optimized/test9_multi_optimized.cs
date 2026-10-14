@@ -633,7 +633,7 @@ namespace cAlgo
             if (canOpenLong && !shouldFilterLong && _currentEntry.CheckLongSignal(Bars, lastIndex, entryParams))
             {
                 double volume = CalculateVolume(positionSizeToUse);
-                var result = ExecuteMarketOrder(TradeType.Buy, Symbol, volume);
+                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volume);
                 if (result.IsSuccessful && result.Position != null)
                 {
                     string positionId = result.Position.Id.ToString();
@@ -647,7 +647,7 @@ namespace cAlgo
             else if (canOpenShort && !shouldFilterShort && _currentEntry.CheckShortSignal(Bars, lastIndex, entryParams))
             {
                 double volume = CalculateVolume(positionSizeToUse);
-                var result = ExecuteMarketOrder(TradeType.Sell, Symbol, volume);
+                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volume);
                 if (result.IsSuccessful && result.Position != null)
                 {
                     string positionId = result.Position.Id.ToString();
