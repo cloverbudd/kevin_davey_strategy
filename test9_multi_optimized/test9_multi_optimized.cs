@@ -54,8 +54,9 @@ namespace cAlgo
     // Sizing method enum for dropdown
     public enum SizingMethod
     {
-        Percentage,     // Use percentage of equity
-        FixedVolume     // Use fixed volume in lots
+        Percentage,     // Position face value = percentage of equity (exposure, not risk)
+        FixedVolume,    // Use fixed volume in lots
+        RiskPercent     // Risk a percentage of equity per trade, sized from the stop distance
     }
 
     // Market regime classification
@@ -116,6 +117,12 @@ namespace cAlgo
         [Parameter("Position Mode", DefaultValue = PositionMode.Multiple, Group = "Basic")]
         public PositionMode Mode { get; set; }
         
+        [Parameter("Order Label", DefaultValue = "MultiStrategy", Group = "Basic")]
+        public string OrderLabel { get; set; }
+
+        [Parameter("Verbose Logging", DefaultValue = false, Group = "Basic")]
+        public bool VerboseLogging { get; set; }
+
         [Parameter("Use Market Conditions", DefaultValue = true, Group = "Basic")]
         public bool UseMarketConditions { get; set; }
 
@@ -148,6 +155,9 @@ namespace cAlgo
 
         [Parameter("Position Size % (Base)", DefaultValue = 3.0, Group = "Position Sizing")]
         public double PositionSizePct { get; set; }
+
+        [Parameter("Risk Per Trade %", DefaultValue = 1.0, MinValue = 0.01, Step = 0.05, Group = "Position Sizing")]
+        public double RiskPerTradePct { get; set; }
 
         [Parameter("Fixed Volume (Lots)", DefaultValue = 0.1, Group = "Position Sizing")]
         public double FixedVolume { get; set; }
@@ -418,8 +428,6 @@ namespace cAlgo
         private Dictionary<string, ExitStrategy> _exitStrategies = new Dictionary<string, ExitStrategy>();
         private EntryStrategy _currentEntry;
         private ExitStrategy _currentExit;
-        private Dictionary<string, int> _positionEntryBars = new Dictionary<string, int>();
-        private Dictionary<string, double> _positionStopLossLevels = new Dictionary<string, double>();
         
         // Market condition indicators (only used when UseMarketConditions is true)
         private AverageTrueRange _atr;
@@ -461,6 +469,11 @@ namespace cAlgo
             Print($"Entry: {EntryStrategyName}, Exit: {ExitStrategyName}, Mode: {Mode}");
             Print($"Market Conditions: {(UseMarketConditions ? "Enabled" : "Disabled")}");
             Print($"Stop Loss: {(EnableStopLoss ? "Enabled" : "Disabled")}");
+
+            if (SizingMethod == SizingMethod.RiskPercent && !EnableStopLoss)
+            {
+                Print("Warning: RiskPercent sizing needs a stop loss to size from; falling back to Percentage sizing");
+            }
         }
 
         private void RegisterEntryStrategies()
@@ -521,12 +534,6 @@ namespace cAlgo
             _exitStrategies.Add("Stretch_Exit", stretchExit);
         }
 
-        protected override void OnTick()
-        {
-            // Check stop loss on EVERY tick (critical for accurate execution)
-            CheckStopLossOnTick();
-        }
-
         protected override void OnBar()
         {
             // OnBar fires when a new bar opens; signals are evaluated on the bar that just closed,
@@ -539,168 +546,108 @@ namespace cAlgo
             // Get parameters (adjusted if market conditions are enabled)
             Dictionary<string, object> entryParams = GetEntryParameters();
             Dictionary<string, object> exitParams = GetExitParameters();
-            double positionSizeToUse = PositionSizePct;
+            double sizeMultiplier = 1.0;
 
             // Update market conditions and adjust parameters if enabled
             if (UseMarketConditions)
             {
                 UpdateMarketConditions(lastIndex);
-                
+
                 // Auto-switch strategy based on regime if enabled
                 if (AutoSwitchStrategyByRegime)
                 {
                     SwitchStrategyByRegime();
                 }
-                
+
                 entryParams = AdjustParametersBasedOnMarketConditions(entryParams);
                 exitParams = AdjustParametersBasedOnMarketConditions(exitParams);
-                
-                // Use adjusted position size if available
-                if (entryParams.ContainsKey("position_size_pct"))
+                sizeMultiplier = GetCurrentRegimeSizeMultiplier();
+            }
+
+            // Check for exits on this bot's positions first. FindAll returns a snapshot,
+            // so closing positions inside the loop is safe
+            foreach (var position in Positions.FindAll(OrderLabel, SymbolName))
+            {
+                // Each position exits with the strategy it was opened with (stored in its comment),
+                // so a regime switch never hands an open trade to a different exit
+                ExitStrategy exit = _exitStrategies.TryGetValue(position.Comment ?? "", out var openedWith)
+                    ? openedWith
+                    : _currentExit;
+
+                bool shouldExit = position.TradeType == TradeType.Buy
+                    ? exit.CheckLongExit(Bars, lastIndex, position, exitParams)
+                    : exit.CheckShortExit(Bars, lastIndex, position, exitParams);
+
+                // Max bars exit, counted from the position's entry time so it survives bot restarts
+                if (!shouldExit && MaxBars > 0)
                 {
-                    positionSizeToUse = (double)entryParams["position_size_pct"];
+                    int entryBar = Bars.OpenTimes.GetIndexByTime(position.EntryTime);
+                    if (entryBar >= 0 && currentBarIndex - entryBar >= MaxBars)
+                    {
+                        shouldExit = true;
+                    }
+                }
+
+                if (shouldExit)
+                {
+                    ClosePosition(position);
                 }
             }
 
-            // Check for exits on existing positions first (bar-based strategies)
-            foreach (var position in Positions)
-            {
-                if (position.Symbol == Symbol)
-                {
-                    bool shouldExit = false;
-                    string positionId = position.Id.ToString();
-                    
-                    // Check exit strategy
-                    if (position.TradeType == TradeType.Buy)
-                    {
-                        shouldExit = _currentExit.CheckLongExit(Bars, lastIndex, position, exitParams);
-                    }
-                    else if (position.TradeType == TradeType.Sell)
-                    {
-                        shouldExit = _currentExit.CheckShortExit(Bars, lastIndex, position, exitParams);
-                    }
-                    
-                    // Check max bars exit condition
-                    if (!shouldExit && MaxBars > 0)
-                    {
-                        if (_positionEntryBars.TryGetValue(positionId, out int entryBar))
-                        {
-                            int barsHeld = currentBarIndex - entryBar;
-                            if (barsHeld >= MaxBars)
-                            {
-                                shouldExit = true;
-                            }
-                        }
-                    }
-                    
-                    if (shouldExit)
-                    {
-                        ClosePosition(position);
-                        _positionEntryBars.Remove(positionId);
-                        _positionStopLossLevels.Remove(positionId);
-                    }
-                }
-            }
+            // Single: one position at a time; Multiple: up to MaxConcurrent
+            int openCount = Positions.FindAll(OrderLabel, SymbolName).Length;
+            int maxOpen = Mode == PositionMode.Single ? 1 : MaxConcurrent;
+            if (openCount >= maxOpen)
+                return;
 
-            // Check for new entry signals if we can open a new position
-            bool canOpenPosition = true;
-            if (Mode == PositionMode.Multiple)
-            {
-                int currentPositionCount = 0;
-                foreach (var position in Positions)
-                {
-                    if (position.Symbol == Symbol)
-                    {
-                        currentPositionCount++;
-                    }
-                }
-                canOpenPosition = currentPositionCount < MaxConcurrent;
-            }
-            bool canOpenLong = (Mode == PositionMode.Multiple || !HasOpenPosition(TradeType.Buy)) && canOpenPosition;
-            bool canOpenShort = (Mode == PositionMode.Multiple || !HasOpenPosition(TradeType.Sell)) && canOpenPosition;
-            
             // Skip entries in trending markets if enabled (protects mean reversion from strong trends)
             if (ShouldSkipEntry())
             {
-                canOpenLong = false;
-                canOpenShort = false;
-                Print("Skipping entry - current regime is HighVolTrending and SkipEntriesInTrending is enabled");
+                Log("Skipping entry - current regime is HighVolTrending and SkipEntriesInTrending is enabled");
+                return;
             }
 
-            bool shouldFilterLong = ShouldFilterTrade(true, lastIndex);
-            bool shouldFilterShort = ShouldFilterTrade(false, lastIndex);
-
-            if (canOpenLong && !shouldFilterLong && _currentEntry.CheckLongSignal(Bars, lastIndex, entryParams))
-            {
-                double volume = CalculateVolume(positionSizeToUse);
-                var result = ExecuteMarketOrder(TradeType.Buy, SymbolName, volume);
-                if (result.IsSuccessful && result.Position != null)
-                {
-                    string positionId = result.Position.Id.ToString();
-                    _positionEntryBars[positionId] = currentBarIndex;
-                    if (EnableStopLoss)
-                    {
-                        _positionStopLossLevels[positionId] = CalculateInitialStopLoss(TradeType.Buy, lastIndex);
-                    }
-                }
-            }
-            else if (canOpenShort && !shouldFilterShort && _currentEntry.CheckShortSignal(Bars, lastIndex, entryParams))
-            {
-                double volume = CalculateVolume(positionSizeToUse);
-                var result = ExecuteMarketOrder(TradeType.Sell, SymbolName, volume);
-                if (result.IsSuccessful && result.Position != null)
-                {
-                    string positionId = result.Position.Id.ToString();
-                    _positionEntryBars[positionId] = currentBarIndex;
-                    if (EnableStopLoss)
-                    {
-                        _positionStopLossLevels[positionId] = CalculateInitialStopLoss(TradeType.Sell, lastIndex);
-                    }
-                }
-            }
-        }
-
-        // Check stop loss on every tick for accurate execution
-        private void CheckStopLossOnTick()
-        {
-            if (!EnableStopLoss)
+            if (ShouldFilterTrade(lastIndex))
                 return;
 
-            foreach (var position in Positions)
+            if (_currentEntry.CheckLongSignal(Bars, lastIndex, entryParams))
             {
-                if (position.Symbol == Symbol)
-                {
-                    string positionId = position.Id.ToString();
-                    
-                    if (_positionStopLossLevels.TryGetValue(positionId, out double stopLossLevel))
-                    {
-                        bool shouldExit = false;
-                        double currentPrice;
-
-                        if (position.TradeType == TradeType.Buy)
-                        {
-                            currentPrice = Symbol.Bid;
-                            shouldExit = currentPrice <= stopLossLevel;
-                        }
-                        else
-                        {
-                            currentPrice = Symbol.Ask;
-                            shouldExit = currentPrice >= stopLossLevel;
-                        }
-
-                        if (shouldExit)
-                        {
-                            Print($"Stop Loss hit for {position.TradeType} position. Current: {currentPrice:F5}, Stop: {stopLossLevel:F5}");
-                            ClosePosition(position);
-                            _positionEntryBars.Remove(positionId);
-                            _positionStopLossLevels.Remove(positionId);
-                        }
-                    }
-                }
+                OpenPosition(TradeType.Buy, lastIndex, sizeMultiplier);
+            }
+            else if (_currentEntry.CheckShortSignal(Bars, lastIndex, entryParams))
+            {
+                OpenPosition(TradeType.Sell, lastIndex, sizeMultiplier);
             }
         }
 
-        private bool ShouldFilterTrade(bool isLong, int index)
+        private void OpenPosition(TradeType tradeType, int index, double sizeMultiplier)
+        {
+            double? stopLossPips = null;
+            if (EnableStopLoss)
+            {
+                double stopPrice = CalculateInitialStopLoss(tradeType, index);
+                double entryPrice = tradeType == TradeType.Buy ? Symbol.Ask : Symbol.Bid;
+                double distance = tradeType == TradeType.Buy ? entryPrice - stopPrice : stopPrice - entryPrice;
+                if (distance <= 0)
+                {
+                    Print($"Skipping {tradeType}: price {entryPrice:F5} is already beyond the stop {stopPrice:F5}");
+                    return;
+                }
+                stopLossPips = distance / Symbol.PipSize;
+            }
+
+            double volume = CalculateVolume(sizeMultiplier, stopLossPips);
+
+            // The stop goes to the broker with the order, so the position stays protected even if
+            // the bot stops; the comment records the exit strategy this position is managed with
+            var result = ExecuteMarketOrder(tradeType, SymbolName, volume, OrderLabel, stopLossPips, null, _currentExit.Name);
+            if (!result.IsSuccessful)
+            {
+                Print($"{tradeType} order failed: {result.Error}");
+            }
+        }
+
+        private bool ShouldFilterTrade(int index)
         {
             // The ADX block protects mean-reversion entries from trends; it must not block the
             // trend-following entry, which only trades when ADX is high
@@ -710,73 +657,50 @@ namespace cAlgo
             if (EnableAdxAboveThresholdBlock && _adx != null)
             {
                 double adxValue = _adx.ADX[index];
-                
+
                 if (adxValue > AdxThreshold)
                 {
-                    Print("Trade filtered: ADX {0} is above threshold {1}", adxValue, AdxThreshold);
+                    Log($"Trade filtered: ADX {adxValue:F2} is above threshold {AdxThreshold}");
                     return true;
                 }
             }
-            
+
             return false;
         }
 
-        private bool HasOpenPosition(TradeType type)
+        private double CalculateVolume(double sizeMultiplier, double? stopLossPips)
         {
-            if (Mode == PositionMode.Single)
+            double rawVolume;
+
+            if (SizingMethod == SizingMethod.FixedVolume)
             {
-                foreach (var position in Positions)
-                {
-                    if (position.Symbol == Symbol && position.TradeType == type)
-                        return true;
-                }
-                return false;
+                // Fixed volume in lots, converted with the symbol's own lot size
+                rawVolume = Symbol.QuantityToVolumeInUnits(FixedVolume);
             }
-            return false; // Multiple allows any number of positions
+            else if (SizingMethod == SizingMethod.RiskPercent && stopLossPips.HasValue)
+            {
+                // Risk a fixed % of equity: size the trade so that hitting the stop loses that amount
+                double riskAmount = Account.Equity * (RiskPerTradePct * sizeMultiplier / 100.0);
+                rawVolume = riskAmount / (stopLossPips.Value * Symbol.PipValue);
+            }
+            else
+            {
+                // Notional sizing: the position's face value is a % of equity. This sets exposure,
+                // not risk, and assumes the account currency matches the symbol's quote currency
+                double notional = Account.Equity * (PositionSizePct * sizeMultiplier / 100.0);
+                rawVolume = notional / Symbol.Ask;
+            }
+
+            // Clamp to the allowed range and round down to a valid volume step
+            double volume = Math.Max(Symbol.VolumeInUnitsMin, Math.Min(Symbol.VolumeInUnitsMax, rawVolume));
+            return Symbol.NormalizeVolumeInUnits(volume, RoundingMode.Down);
         }
 
-    private double CalculateVolume(double positionSizePct = -1)
-    {
-        // Ensure volume is within allowed range and rounds to the nearest volume step
-        double minVolume = Symbol.VolumeInUnitsMin;
-        double maxVolume = Symbol.VolumeInUnitsMax;
-        double volumeStep = Symbol.VolumeInUnitsStep;
-        double volume;
-        
-        if (SizingMethod == SizingMethod.FixedVolume)
+        private void Log(string message)
         {
-            // Use fixed volume in lots, convert to units (1 lot = 100,000 units)
-            double rawVolume = FixedVolume * 100000;
-            
-            // Clamp to allowed range
-            volume = Math.Max(minVolume, Math.Min(maxVolume, rawVolume));
+            if (VerboseLogging)
+                Print(message);
         }
-        else
-        {
-            // Use adjusted position size if provided, otherwise use the parameter
-            double sizeToUse = positionSizePct > 0 ? positionSizePct : PositionSizePct;
-            
-            // Calculate position size based on percentage of current account equity
-            double equity = Account.Equity;
-            double riskAmount = equity * (sizeToUse / 100.0);
-            
-            // Calculate volume in units (1 unit = 1 unit of base currency)
-            // For forex, volume is in units of the base currency
-            // Price is the current price of the symbol
-            double price = Symbol.Ask;
-            
-            // Calculate raw volume: riskAmount / price
-            double rawVolume = riskAmount / price;
-            
-            // Clamp to allowed range
-            volume = Math.Max(minVolume, Math.Min(maxVolume, rawVolume));
-        }
-        
-        // Round to nearest volume step
-        volume = Math.Round(volume / volumeStep) * volumeStep;
-        
-        return volume;
-    }
 
         // Get entry parameters from cTrader UI inputs (all strategies are adjustable)
         private Dictionary<string, object> GetEntryParameters()
@@ -908,17 +832,13 @@ namespace cAlgo
             else
                 _currentRegime = MarketRegime.HighVolTrending;
             
-            Print($"Market regime: {_currentRegime}, Volatility={currentVolatility:F4}, ADX={currentTrendStrength:F2}");
+            Log($"Market regime: {_currentRegime}, Volatility={currentVolatility:F4}, ADX={currentTrendStrength:F2}");
         }
         
         private Dictionary<string, object> AdjustParametersBasedOnMarketConditions(Dictionary<string, object> parameters)
         {
             // Create a copy of the parameters
             var adjustedParams = new Dictionary<string, object>(parameters);
-            
-            // Add position size adjustment based on regime
-            double sizeMult = GetCurrentRegimeSizeMultiplier();
-            adjustedParams["position_size_pct"] = PositionSizePct * sizeMult;
             
             // Adjust strategy parameters based on regime
             switch (_currentRegime)
@@ -968,7 +888,7 @@ namespace cAlgo
 
             // Standard MA periods work well - keep as-is
 
-            Print("Applied LowVolRanging parameter adjustments");
+            Log("Applied LowVolRanging parameter adjustments");
         }
         
         private void AdjustParametersForHighVolRanging(Dictionary<string, object> parameters)
@@ -983,7 +903,7 @@ namespace cAlgo
             if (parameters.ContainsKey("std_dev"))
                 parameters["std_dev"] = (double)parameters["std_dev"] * 1.2;
             
-            Print("Applied HighVolRanging parameter adjustments");
+            Log("Applied HighVolRanging parameter adjustments");
         }
         
         private void AdjustParametersForHighVolTrending(Dictionary<string, object> parameters)
@@ -1008,7 +928,7 @@ namespace cAlgo
             if (parameters.ContainsKey("exit_oversold"))
                 parameters["exit_oversold"] = Math.Max(15, (int)parameters["exit_oversold"] - 5);
             
-            Print("Applied HighVolTrending parameter adjustments");
+            Log("Applied HighVolTrending parameter adjustments");
         }
         
         // Check if we should skip entry based on regime
@@ -1058,7 +978,7 @@ namespace cAlgo
 
             if (strategyChanged)
             {
-                Print($"Strategy switched to: {_currentEntry.Name} + {_currentExit.Name} (Regime: {_currentRegime})");
+                Log($"Strategy switched to: {_currentEntry.Name} + {_currentExit.Name} (Regime: {_currentRegime})");
             }
         }
         #endregion
@@ -1190,7 +1110,7 @@ namespace cAlgo
                 }
             }
 
-            Print($"Initial Stop Loss set for {tradeType}: {stopLossPrice:F5} (Trend: {trend})");
+            Log($"Initial Stop Loss set for {tradeType}: {stopLossPrice:F5} (Trend: {trend})");
             return stopLossPrice;
         }
         #endregion
