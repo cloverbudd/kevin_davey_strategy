@@ -24,7 +24,8 @@ namespace cAlgo
         MR_BollingerRSI,
         MR_MAReversion,
         MR_StochasticVolume,
-        TF_EMACrossover
+        TF_EMACrossover,
+        KD_MAStretch
     }
 
     // Exit strategy enum for dropdown
@@ -33,7 +34,8 @@ namespace cAlgo
         RSI_Exit,
         BB_Exit,
         MA_Exit,
-        Stretch_Exit
+        Stretch_Exit,
+        KD_MAStretch_Exit
     }
 
     // MA Type enum for dropdown
@@ -104,7 +106,7 @@ namespace cAlgo
         public abstract bool CheckShortExit(Bars bars, int index, Position position, Dictionary<string, object> parameters);
     }
 
-    [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.FullAccess, AddIndicators = true)]
+    [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.FullAccess, AddIndicators = false)]
     public class MultiStrategyBacktester : Robot
     {
         #region Parameters
@@ -335,6 +337,21 @@ namespace cAlgo
         public int TfTrendWindow { get; set; }
         #endregion
 
+        #region KD_MAStretch Entry (Kevin Davey)
+        [Parameter("MA Length (InputVar2)", DefaultValue = 10, MinValue = 5, MaxValue = 20, Step = 5, Group = "KD_MAStretch")]
+        public int KdMaPeriod { get; set; }
+
+        [Parameter("Stretch Input (InputVar3)", DefaultValue = 25, MinValue = 20, MaxValue = 60, Step = 5, Group = "KD_MAStretch")]
+        public int KdStretchInput { get; set; }
+
+        [Parameter("Exit On MA Cross (InputVar4)", DefaultValue = true, Group = "KD_MAStretch")]
+        public bool KdExitOnMa { get; set; }
+
+        // InputVar33 in Davey's code: maps InputVar3 to a stretch as a fraction of the MA
+        // (20 -> 0.33%, 25 -> 1.17%, each +5 adds about 1.17%)
+        private double KdStretchFraction => 0.5 * (0.004667 * KdStretchInput - 0.08667);
+        #endregion
+
         #endregion
 
         #region === EXIT STRATEGY PARAMETERS ===
@@ -469,6 +486,11 @@ namespace cAlgo
             Print($"Entry: {EntryStrategyName}, Exit: {ExitStrategyName}, Mode: {Mode}");
             Print($"Market Conditions: {(UseMarketConditions ? "Enabled" : "Disabled")}");
             Print($"Stop Loss: {(EnableStopLoss ? "Enabled" : "Disabled")}");
+            Print($"KD_MAStretch: MA {KdMaPeriod}, InputVar3 {KdStretchInput} -> stretch {KdStretchFraction:P2} of the MA");
+            if (KdStretchFraction <= 0)
+            {
+                Print("Warning: KD_MAStretch InputVar3 must be above 18 for a positive stretch; the entry will fire on almost every bar");
+            }
 
             if (SizingMethod == SizingMethod.RiskPercent && !EnableStopLoss)
             {
@@ -513,6 +535,10 @@ namespace cAlgo
             var tfEmaCrossoverEntry = new TFEMACrossoverEntry();
             tfEmaCrossoverEntry.SetIndicators(Indicators);
             _entryStrategies.Add("TF_EMACrossover", tfEmaCrossoverEntry);
+            
+            var kdMaStretchEntry = new KDMAStretchEntry();
+            kdMaStretchEntry.SetIndicators(Indicators);
+            _entryStrategies.Add("KD_MAStretch", kdMaStretchEntry);
         }
 
         private void RegisterExitStrategies()
@@ -532,6 +558,10 @@ namespace cAlgo
             var stretchExit = new StretchExit();
             stretchExit.SetIndicators(Indicators);
             _exitStrategies.Add("Stretch_Exit", stretchExit);
+            
+            var kdMaStretchExit = new KDMAStretchExit();
+            kdMaStretchExit.SetIndicators(Indicators);
+            _exitStrategies.Add("KD_MAStretch_Exit", kdMaStretchExit);
         }
 
         protected override void OnBar()
@@ -758,6 +788,10 @@ namespace cAlgo
             parameters["long_window"] = TfLongWindow;
             parameters["trend_window"] = TfTrendWindow;
             
+            // KD_MAStretch Entry
+            parameters["kd_ma_period"] = KdMaPeriod;
+            parameters["kd_stretch"] = KdStretchFraction;
+            
             return parameters;
         }
 
@@ -804,6 +838,10 @@ namespace cAlgo
             parameters["stretch_exit_ma_period"] = StretchExitMaPeriod;
             parameters["stretch_exit_atr_period"] = StretchExitAtrPeriod;
             parameters["stretch_exit_atr_multiple"] = StretchExitAtrMultiple;
+            
+            // KD_MAStretch_Exit
+            parameters["kd_ma_period"] = KdMaPeriod;
+            parameters["kd_exit_on_ma"] = KdExitOnMa;
             
             return parameters;
         }
@@ -1356,6 +1394,31 @@ namespace cAlgo
             return emaShort.Result[index] < emaLong.Result[index] && emaShort.Result[index - 1] >= emaLong.Result[index - 1];
         }
     }
+
+    // KD_MAStretch - Kevin Davey's moving average stretch entry: the close is far from its
+    // InputVar2-length MA, with "far" measured as a fraction of the MA (InputVar33)
+    public class KDMAStretchEntry : EntryStrategy
+    {
+        public override string Name => "KD_MAStretch";
+        
+        public override bool CheckLongSignal(Bars bars, int index, Dictionary<string, object> parameters)
+        {
+            double ma = Indicators.SimpleMovingAverage(bars.ClosePrices, (int)parameters["kd_ma_period"]).Result[index];
+            double stretch = (double)parameters["kd_stretch"];
+            
+            // Long: the close is below the MA by more than InputVar33 x MA
+            return ma - bars.ClosePrices[index] > stretch * ma;
+        }
+        
+        public override bool CheckShortSignal(Bars bars, int index, Dictionary<string, object> parameters)
+        {
+            double ma = Indicators.SimpleMovingAverage(bars.ClosePrices, (int)parameters["kd_ma_period"]).Result[index];
+            double stretch = (double)parameters["kd_stretch"];
+            
+            // Short: the close is above the MA by more than InputVar33 x MA
+            return bars.ClosePrices[index] - ma > stretch * ma;
+        }
+    }
     #endregion
 
     #region Exit Strategy Implementations
@@ -1570,6 +1633,31 @@ namespace cAlgo
             double threshold = (double)parameters["stretch_exit_atr_multiple"];
             double stretch = Math.Abs(currentPrice - maValue) / atrValue;
             return stretch <= threshold;
+        }
+    }
+
+    // KD_MAStretch_Exit - Kevin Davey's moving average stretch exit: leave once the close
+    // crosses back over the same InputVar2-length MA the entry used (only when InputVar4 is on)
+    public class KDMAStretchExit : ExitStrategy
+    {
+        public override string Name => "KD_MAStretch_Exit";
+        
+        public override bool CheckLongExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
+        {
+            if (!(bool)parameters["kd_exit_on_ma"])
+                return false;
+            
+            var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, (int)parameters["kd_ma_period"]);
+            return bars.ClosePrices[index] > ma.Result[index];
+        }
+        
+        public override bool CheckShortExit(Bars bars, int index, Position position, Dictionary<string, object> parameters)
+        {
+            if (!(bool)parameters["kd_exit_on_ma"])
+                return false;
+            
+            var ma = Indicators.SimpleMovingAverage(bars.ClosePrices, (int)parameters["kd_ma_period"]);
+            return bars.ClosePrices[index] < ma.Result[index];
         }
     }
     #endregion
