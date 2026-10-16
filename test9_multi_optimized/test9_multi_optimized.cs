@@ -360,11 +360,19 @@ namespace cAlgo
         //  Two ways to fit forex:
         //   1. PercentOfMA + Stretch Scale: stretch = Scale x InputVar33. Keeps Kevin's formula
         //      and the 25-40 grid. Rough starting Scales for EURUSD-type majors:
-        //         Daily 0.35  |  H4 / H6 0.15  |  H1 0.08
+        //         Daily 0.35 (guess)  |  H6 0.33 (measured, see below)  |  H1 0.08 (guess)
         //      Each pair and timeframe needs its own Scale (GBPJPY moves far more than EURCHF).
         //   2. AtrMultiple: stretch = ATR Multiple x ATR(ATR Period). Adapts to the pair and
-        //      timeframe by itself, so one grid (1.0-2.5, step 0.5) works everywhere.
+        //      timeframe by itself, so one grid (1.5-3.0, step 0.5) works everywhere.
         //   -> One market, staying closest to Kevin: use 1. Several pairs/timeframes: use 2.
+        //
+        //  Measured: EURUSD H6, MA 10, ATR 14, Jan-Oct 2026 (816 bars). Distance of closes
+        //  from the MA at the 90th / 95th / 98th percentile:
+        //         % of MA: 0.49% / 0.63% / 0.82%      ATRs: 1.83 / 2.25 / 2.77
+        //      Kevin's 1.50% (InputVar3 25) was reached on 0.0% of closes -> no trades.
+        //      Scale 0.33 turns 25-40 into 0.50 / 0.88 / 1.26 / 1.65% - only the first two trade.
+        //      ATR grid 1.5 / 2.0 / 2.5 / 3.0 spans ~85th-99th percentile - all four useful.
+        //      Only ~10 months of data: re-check over several years before settling.
         //
         //  Picking values from data: leave "Print Stretch Stats" on and run a backtest. At the
         //  END of the run the log shows how far closes get from the MA (90th/95th/98th
@@ -389,7 +397,7 @@ namespace cAlgo
         [Parameter("Stretch Scale (PercentOfMA, 1 = Kevin)", DefaultValue = 1.0, MinValue = 0.01, Step = 0.05, Group = "KD_MAStretch")]
         public double KdStretchScale { get; set; }
 
-        [Parameter("ATR Multiple (AtrMultiple)", DefaultValue = 1.5, MinValue = 1.0, MaxValue = 2.5, Step = 0.5, Group = "KD_MAStretch")]
+        [Parameter("ATR Multiple (AtrMultiple)", DefaultValue = 2.0, MinValue = 1.5, MaxValue = 3.0, Step = 0.5, Group = "KD_MAStretch")]
         public double KdAtrMultiple { get; set; }
 
         [Parameter("ATR Period (AtrMultiple)", DefaultValue = 14, MinValue = 1, Group = "KD_MAStretch")]
