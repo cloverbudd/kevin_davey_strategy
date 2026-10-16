@@ -341,14 +341,14 @@ namespace cAlgo
         [Parameter("MA Length (InputVar2)", DefaultValue = 10, MinValue = 5, MaxValue = 20, Step = 5, Group = "KD_MAStretch")]
         public int KdMaPeriod { get; set; }
 
-        [Parameter("Stretch Input (InputVar3)", DefaultValue = 25, MinValue = 20, MaxValue = 60, Step = 5, Group = "KD_MAStretch")]
+        [Parameter("Stretch Input (InputVar3)", DefaultValue = 25, MinValue = 25, MaxValue = 40, Step = 5, Group = "KD_MAStretch")]
         public int KdStretchInput { get; set; }
 
         [Parameter("Exit On MA Cross (InputVar4)", DefaultValue = true, Group = "KD_MAStretch")]
         public bool KdExitOnMa { get; set; }
 
         // InputVar33 in Davey's code: maps InputVar3 to a stretch as a fraction of the MA
-        // (20 -> 0.33%, 25 -> 1.17%, each +5 adds about 1.17%)
+        // (25 -> 1.50%, 30 -> 2.67%, 35 -> 3.83%, 40 -> 5.00%)
         private double KdStretchFraction => 0.5 * (0.004667 * KdStretchInput - 0.08667);
         #endregion
 
@@ -489,7 +489,7 @@ namespace cAlgo
             Print($"KD_MAStretch: MA {KdMaPeriod}, InputVar3 {KdStretchInput} -> stretch {KdStretchFraction:P2} of the MA");
             if (KdStretchFraction <= 0)
             {
-                Print("Warning: KD_MAStretch InputVar3 must be above 18 for a positive stretch; the entry will fire on almost every bar");
+                Print("Warning: KD_MAStretch stretch is not positive; the entry will fire on almost every bar");
             }
 
             if (SizingMethod == SizingMethod.RiskPercent && !EnableStopLoss)
