@@ -510,6 +510,12 @@ namespace cAlgo
         
         // Market condition classification
         private MarketRegime _currentRegime;
+
+        // KD_MAStretch stats readout (see PrintStretchStats)
+        private SimpleMovingAverage _kdStatsMa;
+        private AverageTrueRange _kdStatsAtr;
+        private readonly List<double> _kdPercentDistances = new List<double>();
+        private readonly List<double> _kdAtrDistances = new List<double>();
         #endregion
 
         protected override void OnStart()
@@ -527,6 +533,12 @@ namespace cAlgo
             _adx = Indicators.DirectionalMovementSystem(14);
             _maFast = Indicators.SimpleMovingAverage(Bars.ClosePrices, 20);
             _maSlow = Indicators.SimpleMovingAverage(Bars.ClosePrices, 50);
+
+            if (PrintKdStretchStats)
+            {
+                _kdStatsMa = Indicators.SimpleMovingAverage(Bars.ClosePrices, KdMaPeriod);
+                _kdStatsAtr = Indicators.AverageTrueRange(KdAtrPeriod, MovingAverageType.Simple);
+            }
             
             if (UseMarketConditions)
             {
@@ -635,6 +647,9 @@ namespace cAlgo
             int lastIndex = currentBarIndex - 1;
             if (lastIndex < 1)
                 return;
+
+            if (PrintKdStretchStats)
+                RecordStretchStats(lastIndex);
 
             // Get parameters (adjusted if market conditions are enabled)
             Dictionary<string, object> entryParams = GetEntryParameters();
@@ -913,28 +928,28 @@ namespace cAlgo
         }
 
         // KD_MAStretch readout: how far closes actually get from the MA on this symbol and
-        // timeframe, so the stretch can be set from data instead of guesses. Printed at the end
-        // of a run, when all bars are loaded
+        // timeframe, so the stretch can be set from data instead of guesses. Distances are
+        // collected on every closed bar (RecordStretchStats) and printed at the end of the run
+        private void RecordStretchStats(int index)
+        {
+            double ma = _kdStatsMa.Result[index];
+            double atr = _kdStatsAtr.Result[index];
+            if (double.IsNaN(ma) || double.IsNaN(atr) || ma <= 0 || atr <= 0)
+                return;
+            
+            double distance = Math.Abs(Bars.ClosePrices[index] - ma);
+            _kdPercentDistances.Add(distance / ma);
+            _kdAtrDistances.Add(distance / atr);
+        }
+        
         private void PrintStretchStats()
         {
-            var ma = Indicators.SimpleMovingAverage(Bars.ClosePrices, KdMaPeriod);
-            var atr = Indicators.AverageTrueRange(KdAtrPeriod, MovingAverageType.Simple);
-            var percentDistances = new List<double>();
-            var atrDistances = new List<double>();
-            
-            for (int i = Math.Max(KdMaPeriod, KdAtrPeriod); i < Bars.Count; i++)
-            {
-                double distance = Math.Abs(Bars.ClosePrices[i] - ma.Result[i]);
-                if (ma.Result[i] > 0 && atr.Result[i] > 0)
-                {
-                    percentDistances.Add(distance / ma.Result[i]);
-                    atrDistances.Add(distance / atr.Result[i]);
-                }
-            }
+            var percentDistances = new List<double>(_kdPercentDistances);
+            var atrDistances = new List<double>(_kdAtrDistances);
             
             if (percentDistances.Count < 100)
             {
-                Print($"KD_MAStretch stats: only {percentDistances.Count} bars, need at least 100 for a useful readout");
+                Print($"KD_MAStretch stats: only {percentDistances.Count} usable bars ({Bars.Count} bars loaded), need at least 100 for a useful readout");
                 return;
             }
             
