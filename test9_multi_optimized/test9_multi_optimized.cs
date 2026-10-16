@@ -104,7 +104,7 @@ namespace cAlgo
         public abstract bool CheckShortExit(Bars bars, int index, Position position, Dictionary<string, object> parameters);
     }
 
-    [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.None)]
+    [Robot(TimeZone = TimeZones.UTC, AccessRights = AccessRights.FullAccess, AddIndicators = true)]
     public class MultiStrategyBacktester : Robot
     {
         #region Parameters
