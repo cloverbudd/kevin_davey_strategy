@@ -52,6 +52,22 @@ Per year (closed trades, net after costs):
 | 2023 | 21 | +180.05 |
 | **Average** | **21.5 / year** | **+116.84 / year** |
 
+### Neighbour check: MA 15 (same settings otherwise, 2020–2023)
+
+| Metric | MA 15 | MA 20 (chosen) |
+|---|---|---|
+| Net profit | +202.68 | +467.36 |
+| Profit factor | 2.28 | 2.79 |
+| Trades | 51 | 86 |
+| Win rate | 61% (31/51) | 66% |
+| Average trade | +3.97 | +5.43 |
+| Max equity drawdown | 232.35 (2.30%) | 198.08 (1.94%) |
+| Swaps | −95.61 | −217.84 |
+
+MA 20 is better on every measure, and MA 15 is still clearly profitable, so the good
+result isn't a lone spike at MA 20. **MA 20 kept for the out-of-sample test.** Decided
+before running 2024–today; run only this one setting out-of-sample.
+
 ### Things to watch
 
 - **Swaps are large:** −217.84, almost half of the net profit, nearly all on longs. If
