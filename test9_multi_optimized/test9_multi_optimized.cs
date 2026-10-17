@@ -350,6 +350,8 @@ namespace cAlgo
         // ==================================================================================
         //  Idea:  close far BELOW its InputVar2-length SMA -> buy; far ABOVE -> sell short.
         //         Exit when the close crosses back over the same MA (InputVar4).
+        //         MA Length: Kevin used 5-20 (step 5); the limit is 30 so the optimizer can check
+        //         beyond his range (EURUSD D1: MA 25 was much weaker than 20, see results/).
         //
         //  Kevin's original stretch (Stretch Mode = PercentOfMA, Stretch Scale = 1.0):
         //         InputVar33 = 0.5 * (0.004667 * InputVar3 - 0.08667)   -> a fraction of the MA
@@ -385,7 +387,7 @@ namespace cAlgo
         //  Position Mode Single, Use Market Conditions off, ADX block off, Stop Loss off,
         //  Max Bars 0.
         // ==================================================================================
-        [Parameter("MA Length (InputVar2)", DefaultValue = 10, MinValue = 5, MaxValue = 20, Step = 5, Group = "KD_MAStretch")]
+        [Parameter("MA Length (InputVar2)", DefaultValue = 10, MinValue = 5, MaxValue = 30, Step = 5, Group = "KD_MAStretch")]
         public int KdMaPeriod { get; set; }
 
         [Parameter("Stretch Mode", DefaultValue = KdStretchMode.PercentOfMA, Group = "KD_MAStretch")]
