@@ -89,20 +89,61 @@ this one setting out-of-sample.
   trade, win rate and drawdown %, not dollars.
 - 2021 was a losing year, so a single losing year out-of-sample isn't by itself a failure.
 
-## Out-of-sample: 1 Jan 2024 – today
+## Out-of-sample: 1 Jan 2024 – 16 Oct 2026 (2.79 years)
 
-*To fill in after the run.* Save that run's files to `2024-today_out-of-sample/` before
-running anything else — cTrader overwrites its Backtesting folder on every run.
+Run on 17 Oct 2026 with the saved MA 20 parameter set (file checked identical to the
+in-sample one). Files in `2024-today_out-of-sample/`.
 
-| Metric | In-sample (2020–2023) | Out-of-sample (2024–today) |
+| Metric | In-sample (2020–2023) | Out-of-sample (2024–2026) |
 |---|---|---|
-| Net profit per year | +116.84 | |
-| Profit factor | 2.79 | |
-| Trades per year | 21.5 | |
-| Win rate | 66% | |
-| Average trade | +5.43 | |
-| Max equity drawdown | 1.94% | |
+| Net profit | +467.36 | +238.51 |
+| Net profit per year | +116.84 | **+85.49 (73% of in-sample)** |
+| Profit factor | 2.79 | **2.57** |
+| Trades per year | 21.5 | 17.6 (49 trades) |
+| Win rate | 66% | 76% (37/49) |
+| Average trade | +5.43 | +4.87 |
+| Max equity drawdown | 1.94% | **1.61%** (166.52) |
+| Max consecutive losses | 8 | 5 |
+| Swaps | −217.84 | −98.38 |
+
+Per year:
+
+| Year | Trades closed | Net |
+|---|---|---|
+| 2024 | 21 | +84.65 |
+| 2025 | 15 | +205.44 |
+| 2026 (to 16 Oct) | 13 | −51.58 |
+
+Long vs short:
+
+| | Long | Short |
+|---|---|---|
+| Net profit | −51.01 | +289.52 |
+| Trades (won) | 22 (10) | 27 (27) |
+| Profit factor | 0.66 | no losing trades |
+| Swaps | −94.66 | −3.72 |
 
 **Rough pass guide:** profit factor still above ~1.2–1.3, profit per year at least about
 half of in-sample, drawdown not much bigger. Worse than in-sample is normal; "worse but
 still clearly working" is a pass.
+
+### Verdict: passes the single out-of-sample test
+
+Profit factor 2.57, 73% of the in-sample profit rate and a smaller drawdown are all
+inside the pass guide. Caveats before trusting it:
+
+- **All the profit came from shorts.** Longs lost −51.01 — before swaps they were about
+  +43.65, so the long side is roughly break-even and swaps tip it negative. In-sample,
+  longs had profit factor 2.96.
+- **27 of 27 shorts won.** That's a lucky streak, not something to expect. With no stop
+  loss, many small wins can hide the risk of one large loss.
+- **49 trades is a small sample,** and 2026 is a losing year so far.
+- MA 20 is a peak (MA 25 was much weaker), which usually means some decay out-of-sample.
+
+### Next steps
+
+1. Walk-forward windows: optimize 2021–2024 → test 2025; optimize 2022–2025 → test 2026.
+2. Monte Carlo on the out-of-sample trade list (Kevin's free spreadsheet).
+3. Look at a stop loss: the short side has had no losing trade yet, which is when a stop
+   matters most.
+4. Incubation on a demo account before real money.
