@@ -52,21 +52,30 @@ Per year (closed trades, net after costs):
 | 2023 | 21 | +180.05 |
 | **Average** | **21.5 / year** | **+116.84 / year** |
 
-### Neighbour check: MA 15 (same settings otherwise, 2020–2023)
+### Neighbour check: MA 15 and MA 25 (same settings otherwise, 2020–2023)
 
-| Metric | MA 15 | MA 20 (chosen) |
-|---|---|---|
-| Net profit | +202.68 | +467.36 |
-| Profit factor | 2.28 | 2.79 |
-| Trades | 51 | 86 |
-| Win rate | 61% (31/51) | 66% |
-| Average trade | +3.97 | +5.43 |
-| Max equity drawdown | 232.35 (2.30%) | 198.08 (1.94%) |
-| Swaps | −95.61 | −217.84 |
+| Metric | MA 15 | MA 20 (chosen) | MA 25 |
+|---|---|---|---|
+| Net profit | +202.68 | **+467.36** | +196.76 |
+| Profit factor | 2.28 | **2.79** | 1.38 |
+| Trades | 51 | 86 | 103 |
+| Win rate | 61% (31/51) | **66%** | 54% (56/103) |
+| Average trade | +3.97 | **+5.43** | +1.91 |
+| Max equity drawdown | 232.35 (2.30%) | **198.08 (1.94%)** | 329.31 (3.26%) |
+| Max consecutive losses | | 8 | 11 |
+| Swaps | −95.61 | −217.84 | −300.37 |
+| Losing years | | 2021 | 2020, 2021 |
 
-MA 20 is better on every measure, and MA 15 is still clearly profitable, so the good
-result isn't a lone spike at MA 20. **MA 20 kept for the out-of-sample test.** Decided
-before running 2024–today; run only this one setting out-of-sample.
+MA 25 per year: 2020 −49.63, 2021 −125.78, 2022 +192.10, 2023 +180.07.
+
+MA 20 is the best of the three. MA 15 is still solid, but MA 25 drops off sharply (profit
+factor 1.38, two losing years), so MA 20 sits at the **top of a hill**, not in the middle
+of a broad plateau: good on the 15 side, steep on the 25 side. Expect out-of-sample to
+come in clearly below the in-sample numbers. Longer MAs hold trades longer, so swaps grow
+with MA length.
+
+**MA 20 kept for the out-of-sample test.** Decided before running 2024–today; run only
+this one setting out-of-sample.
 
 ### Things to watch
 
