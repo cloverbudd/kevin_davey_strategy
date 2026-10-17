@@ -142,8 +142,58 @@ inside the pass guide. Caveats before trusting it:
 
 ### Next steps
 
-1. Walk-forward windows: optimize 2021–2024 → test 2025; optimize 2022–2025 → test 2026.
+1. Walk-forward windows: optimize 2021–2024 → test 2025 (**done**, see below); optimize
+   2022–2025 → test 2026.
 2. Monte Carlo on the out-of-sample trade list (Kevin's free spreadsheet).
 3. Look at a stop loss: the short side has had no losing trade yet, which is when a stop
    matters most.
 4. Incubation on a demo account before real money.
+
+## Walk-forward (4 years in-sample → next 1 year out-of-sample)
+
+Each window is re-optimized on its own 4 years, then the chosen setting runs unchanged on
+the following year. Files in `walk-forward/`.
+
+| Window | Optimized on | Chosen setting | Tested on | Test result |
+|---|---|---|---|---|
+| 1 | 2020–2023 | MA 20, 2.5 × ATR(7), Max Bars 30 | 2024 | +84.65 (21 trades) |
+| 2 | 2021–2024 | MA 20, 2.5 × ATR(7), **Max Bars 0** | 2025 | **+205.14 (15 trades)** |
+| 3 | 2022–2025 | *to do* | 2026 | |
+
+Window 1's 2024 figure is the 2024 year of the out-of-sample run above (same parameters).
+
+### Window 2: optimize 2021–2024, test 2025
+
+Optimization: 765 runs over 1 Jan 2021 – 31 Dec 2024, optimizing MA Length, Stretch Mode,
+ATR Multiple, ATR Period, Stretch Scale, Max Bars and Position Mode. The chosen setting
+appears 12 times (runs 205, 511, 538, …) with identical results, because the other values
+that varied, such as Stretch Scale, do nothing in AtrMultiple mode.
+
+Chosen setting: same as window 1 except **Max Bars 0** (no time exit). Position Mode
+Multiple, Max Concurrent 5, stop loss off, Exit On MA Cross on.
+
+| Metric | In-sample 2021–2024 | Test 2025 |
+|---|---|---|
+| Net profit | +486.60 | +205.14 |
+| Net profit per year | +121.65 | **+205.14 (169% of in-sample)** |
+| Profit factor | 3.70 | no losing trades |
+| Trades | 83 (20.8 / year) | 15 |
+| Win rate | 71% (59/83) | **100% (15/15)** — 3 long, 12 short |
+| Average trade | +5.86 | +13.68 |
+| Max equity drawdown | 1.40% | 0.69% (open trades) |
+| Max consecutive losses | 6 | 0 |
+| Swaps | −237.68 | −8.38 |
+
+2025 trades closed by month: Jan 1, Mar 5, May 2, Jul 5, Aug 2 — none after August.
+
+**Read:**
+
+- **The chosen setting barely moved between windows** (only Max Bars changed). Stable
+  parameters across walk-forward windows are a good sign.
+- **Max Bars made no difference in 2025:** window 1's setting (Max Bars 30) also made
+  +205.44 on 15 trades in 2025, so no 2025 trade lasted 30 bars.
+- **15 wins out of 15 is not repeatable.** With no stop loss, a run of small wins can
+  hide one big loss. It is still a tiny sample, and the strategy was idle from September.
+- **Many settings were optimized at once** (7, 765 runs). Kevin warns that every extra
+  optimized setting adds room for overfitting. Window 3 is a cleaner test with only MA
+  Length and ATR Multiple optimized, and the rest fixed.
