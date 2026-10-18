@@ -1,5 +1,11 @@
 # KD_MAStretch — EURUSD D1 test log
 
+> **Moved:** the strategy now lives in its own cBot, [KDMAStretch](https://github.com/cloverbudd/KDMAStretch),
+> with identical logic and these results' final setting as defaults. KD_MAStretch was removed
+> from `test9_multi_optimized` on 19 Oct 2026. The exact code these tests ran on is the git
+> tag `kd-mastretch-validated` in this repo (`git checkout kd-mastretch-validated`), and the
+> saved `parameters.cbotset` files below only load into that version.
+
 Kevin Davey's moving average stretch, run through `test9_multi_optimized`.
 Process: optimize on 2020–2023 (in-sample), then run the **same parameters, unchanged**
 on 2024 → today (out-of-sample). Do not re-optimize or tweak after seeing the
