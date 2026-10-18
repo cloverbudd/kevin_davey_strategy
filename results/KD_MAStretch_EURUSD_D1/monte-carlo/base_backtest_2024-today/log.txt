@@ -1,0 +1,194 @@
+01/01/2024 00:00:00.000 | Info | CBot instance [test9_multi_optimized, EURUSD, D1] started.
+01/01/2024 22:05:00.000 | Info | Multi-Strategy Framework started
+01/01/2024 22:05:00.000 | Info | Entry: KD_MAStretch, Exit: KD_MAStretch_Exit, Mode: Multiple
+01/01/2024 22:05:00.000 | Info | Market Conditions: Disabled
+01/01/2024 22:05:00.000 | Info | Stop Loss: Disabled
+01/01/2024 22:05:00.000 | Info | KD_MAStretch: MA 20, stretch 2.5 x ATR(7)
+01/04/2024 21:05:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+01/04/2024 21:05:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID1
+08/04/2024 21:05:00.000 | Trade | Closing position PID1 (Volume: 1000)
+08/04/2024 21:05:00.000 | Trade | → Closing position PID1 (Volume: 1000) SUCCEEDED
+14/04/2024 21:05:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+14/04/2024 21:05:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID2
+15/04/2024 21:05:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+15/04/2024 21:05:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID3
+02/05/2024 21:05:00.000 | Trade | Closing position PID2 (Volume: 1000)
+02/05/2024 21:05:00.000 | Trade | → Closing position PID2 (Volume: 1000) SUCCEEDED
+02/05/2024 21:05:00.000 | Trade | Closing position PID3 (Volume: 1000)
+02/05/2024 21:05:00.000 | Trade | → Closing position PID3 (Volume: 1000) SUCCEEDED
+15/05/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+15/05/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID4
+16/05/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+16/05/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID5
+29/05/2024 21:05:00.000 | Trade | Closing position PID4 (Volume: 1000)
+29/05/2024 21:05:00.000 | Trade | → Closing position PID4 (Volume: 1000) SUCCEEDED
+29/05/2024 21:05:00.000 | Trade | Closing position PID5 (Volume: 1000)
+29/05/2024 21:05:00.000 | Trade | → Closing position PID5 (Volume: 1000) SUCCEEDED
+14/07/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+14/07/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID6
+15/07/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+15/07/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID7
+16/07/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+16/07/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID8
+17/07/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+17/07/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID9
+29/07/2024 21:05:00.000 | Trade | Closing position PID6 (Volume: 1000)
+29/07/2024 21:05:00.000 | Trade | → Closing position PID6 (Volume: 1000) SUCCEEDED
+29/07/2024 21:05:00.000 | Trade | Closing position PID7 (Volume: 1000)
+29/07/2024 21:05:00.000 | Trade | → Closing position PID7 (Volume: 1000) SUCCEEDED
+29/07/2024 21:05:00.000 | Trade | Closing position PID8 (Volume: 1000)
+29/07/2024 21:05:00.000 | Trade | → Closing position PID8 (Volume: 1000) SUCCEEDED
+29/07/2024 21:05:00.000 | Trade | Closing position PID9 (Volume: 1000)
+29/07/2024 21:05:00.000 | Trade | → Closing position PID9 (Volume: 1000) SUCCEEDED
+19/08/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+19/08/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID10
+20/08/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+20/08/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID11
+21/08/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+21/08/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID12
+25/08/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+25/08/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID13
+26/08/2024 21:05:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+26/08/2024 21:05:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID14
+03/09/2024 21:05:00.000 | Trade | Closing position PID10 (Volume: 1000)
+03/09/2024 21:05:00.000 | Trade | → Closing position PID10 (Volume: 1000) SUCCEEDED
+03/09/2024 21:05:00.000 | Trade | Closing position PID11 (Volume: 1000)
+03/09/2024 21:05:00.000 | Trade | → Closing position PID11 (Volume: 1000) SUCCEEDED
+03/09/2024 21:05:00.000 | Trade | Closing position PID12 (Volume: 1000)
+03/09/2024 21:05:00.000 | Trade | → Closing position PID12 (Volume: 1000) SUCCEEDED
+03/09/2024 21:05:00.000 | Trade | Closing position PID13 (Volume: 1000)
+03/09/2024 21:05:00.000 | Trade | → Closing position PID13 (Volume: 1000) SUCCEEDED
+03/09/2024 21:05:00.000 | Trade | Closing position PID14 (Volume: 1000)
+03/09/2024 21:05:00.000 | Trade | → Closing position PID14 (Volume: 1000) SUCCEEDED
+09/10/2024 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+09/10/2024 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID15
+10/10/2024 21:05:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+10/10/2024 21:05:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID16
+13/10/2024 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+13/10/2024 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID17
+14/10/2024 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+14/10/2024 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID18
+15/10/2024 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+15/10/2024 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID19
+31/10/2024 21:01:00.000 | Trade | Closing position PID15 (Volume: 1000)
+31/10/2024 21:01:00.000 | Trade | → Closing position PID15 (Volume: 1000) SUCCEEDED
+31/10/2024 21:01:00.000 | Trade | Closing position PID16 (Volume: 1000)
+31/10/2024 21:01:00.000 | Trade | → Closing position PID16 (Volume: 1000) SUCCEEDED
+31/10/2024 21:01:00.000 | Trade | Closing position PID17 (Volume: 1000)
+31/10/2024 21:01:00.000 | Trade | → Closing position PID17 (Volume: 1000) SUCCEEDED
+31/10/2024 21:01:00.000 | Trade | Closing position PID18 (Volume: 1000)
+31/10/2024 21:01:00.000 | Trade | → Closing position PID18 (Volume: 1000) SUCCEEDED
+31/10/2024 21:01:00.000 | Trade | Closing position PID19 (Volume: 1000)
+31/10/2024 21:01:00.000 | Trade | → Closing position PID19 (Volume: 1000) SUCCEEDED
+21/11/2024 22:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+21/11/2024 22:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID20
+24/11/2024 22:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+24/11/2024 22:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID21
+05/12/2024 22:01:00.000 | Trade | Closing position PID20 (Volume: 1000)
+05/12/2024 22:01:00.000 | Trade | → Closing position PID20 (Volume: 1000) SUCCEEDED
+05/12/2024 22:01:00.000 | Trade | Closing position PID21 (Volume: 1000)
+05/12/2024 22:01:00.000 | Trade | → Closing position PID21 (Volume: 1000) SUCCEEDED
+02/01/2025 22:04:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+02/01/2025 22:04:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID22
+20/01/2025 22:03:00.000 | Trade | Closing position PID22 (Volume: 1000)
+20/01/2025 22:03:00.000 | Trade | → Closing position PID22 (Volume: 1000) SUCCEEDED
+05/03/2025 22:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+05/03/2025 22:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID23
+06/03/2025 22:06:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+06/03/2025 22:06:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID24
+09/03/2025 21:02:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+09/03/2025 21:02:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID25
+10/03/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+10/03/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID26
+11/03/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+11/03/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID27
+26/03/2025 21:01:00.000 | Trade | Closing position PID23 (Volume: 1000)
+26/03/2025 21:01:00.000 | Trade | → Closing position PID23 (Volume: 1000) SUCCEEDED
+26/03/2025 21:01:00.000 | Trade | Closing position PID24 (Volume: 1000)
+26/03/2025 21:01:00.000 | Trade | → Closing position PID24 (Volume: 1000) SUCCEEDED
+26/03/2025 21:01:00.000 | Trade | Closing position PID25 (Volume: 1000)
+26/03/2025 21:01:00.000 | Trade | → Closing position PID25 (Volume: 1000) SUCCEEDED
+26/03/2025 21:01:00.000 | Trade | Closing position PID26 (Volume: 1000)
+26/03/2025 21:01:00.000 | Trade | → Closing position PID26 (Volume: 1000) SUCCEEDED
+26/03/2025 21:01:00.000 | Trade | Closing position PID27 (Volume: 1000)
+26/03/2025 21:01:00.000 | Trade | → Closing position PID27 (Volume: 1000) SUCCEEDED
+21/04/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+21/04/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID28
+22/04/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+22/04/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID29
+07/05/2025 21:05:00.000 | Trade | Closing position PID28 (Volume: 1000)
+07/05/2025 21:05:00.000 | Trade | → Closing position PID28 (Volume: 1000) SUCCEEDED
+07/05/2025 21:05:00.000 | Trade | Closing position PID29 (Volume: 1000)
+07/05/2025 21:05:00.000 | Trade | → Closing position PID29 (Volume: 1000) SUCCEEDED
+26/06/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+26/06/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID30
+29/06/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+29/06/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID31
+30/06/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+30/06/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID32
+01/07/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+01/07/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID33
+02/07/2025 21:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+02/07/2025 21:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID34
+15/07/2025 21:01:00.000 | Trade | Closing position PID30 (Volume: 1000)
+15/07/2025 21:01:00.000 | Trade | → Closing position PID30 (Volume: 1000) SUCCEEDED
+15/07/2025 21:01:00.000 | Trade | Closing position PID31 (Volume: 1000)
+15/07/2025 21:01:00.000 | Trade | → Closing position PID31 (Volume: 1000) SUCCEEDED
+15/07/2025 21:01:00.000 | Trade | Closing position PID32 (Volume: 1000)
+15/07/2025 21:01:00.000 | Trade | → Closing position PID32 (Volume: 1000) SUCCEEDED
+15/07/2025 21:01:00.000 | Trade | Closing position PID33 (Volume: 1000)
+15/07/2025 21:01:00.000 | Trade | → Closing position PID33 (Volume: 1000) SUCCEEDED
+15/07/2025 21:01:00.000 | Trade | Closing position PID34 (Volume: 1000)
+15/07/2025 21:01:00.000 | Trade | → Closing position PID34 (Volume: 1000) SUCCEEDED
+30/07/2025 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+30/07/2025 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID35
+31/07/2025 21:01:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+31/07/2025 21:01:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID36
+06/08/2025 21:01:00.000 | Trade | Closing position PID35 (Volume: 1000)
+06/08/2025 21:01:00.000 | Trade | → Closing position PID35 (Volume: 1000) SUCCEEDED
+06/08/2025 21:01:00.000 | Trade | Closing position PID36 (Volume: 1000)
+06/08/2025 21:01:00.000 | Trade | → Closing position PID36 (Volume: 1000) SUCCEEDED
+27/01/2026 22:01:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+27/01/2026 22:01:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID37
+17/02/2026 22:01:00.000 | Trade | Closing position PID37 (Volume: 1000)
+17/02/2026 22:01:00.000 | Trade | → Closing position PID37 (Volume: 1000) SUCCEEDED
+12/03/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+12/03/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID38
+15/03/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+15/03/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID39
+31/03/2026 21:00:00.000 | Trade | Closing position PID38 (Volume: 1000)
+31/03/2026 21:00:00.000 | Trade | → Closing position PID38 (Volume: 1000) SUCCEEDED
+31/03/2026 21:00:00.000 | Trade | Closing position PID39 (Volume: 1000)
+31/03/2026 21:00:00.000 | Trade | → Closing position PID39 (Volume: 1000) SUCCEEDED
+23/06/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+23/06/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID40
+24/06/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+24/06/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID41
+14/07/2026 21:00:00.000 | Trade | Closing position PID40 (Volume: 1000)
+14/07/2026 21:00:00.000 | Trade | → Closing position PID40 (Volume: 1000) SUCCEEDED
+14/07/2026 21:00:00.000 | Trade | Closing position PID41 (Volume: 1000)
+14/07/2026 21:00:00.000 | Trade | → Closing position PID41 (Volume: 1000) SUCCEEDED
+19/08/2026 21:00:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+19/08/2026 21:00:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID42
+20/08/2026 21:00:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+20/08/2026 21:00:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID43
+23/08/2026 21:00:00.000 | Trade | Executing Market Order to Sell 1000 EURUSD
+23/08/2026 21:00:00.000 | Trade | → Executing Market Order to Sell 1000 EURUSD SUCCEEDED, Position PID44
+30/08/2026 21:00:00.000 | Trade | Closing position PID42 (Volume: 1000)
+30/08/2026 21:00:00.000 | Trade | → Closing position PID42 (Volume: 1000) SUCCEEDED
+30/08/2026 21:00:00.000 | Trade | Closing position PID43 (Volume: 1000)
+30/08/2026 21:00:00.000 | Trade | → Closing position PID43 (Volume: 1000) SUCCEEDED
+30/08/2026 21:00:00.000 | Trade | Closing position PID44 (Volume: 1000)
+30/08/2026 21:00:00.000 | Trade | → Closing position PID44 (Volume: 1000) SUCCEEDED
+16/09/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+16/09/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID45
+23/09/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+23/09/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID46
+24/09/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+24/09/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID47
+27/09/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+27/09/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID48
+28/09/2026 21:00:00.000 | Trade | Executing Market Order to Buy 1000 EURUSD
+28/09/2026 21:00:00.000 | Trade | → Executing Market Order to Buy 1000 EURUSD SUCCEEDED, Position PID49
+16/10/2026 20:29:00.000 | Info | Multi-Strategy Framework stopped
+16/10/2026 20:29:00.000 | Info | CBot instance [test9_multi_optimized, EURUSD, D1] stopped.
