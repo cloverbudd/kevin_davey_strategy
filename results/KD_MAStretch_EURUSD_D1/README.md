@@ -307,3 +307,24 @@ equity drawdown was 166.52 (1.61%), and with no stop loss that gap can be large.
 
 All figures are for 0.01 lot with up to 5 positions open; dollar and percentage figures
 scale with trade size (×10 at 0.1 lot).
+
+### Run 2: BlockBootstrap (block size 5), 10,000 iterations
+
+Resamples runs of 5 consecutive trades, so winning and losing streaks stay together.
+File: `monte-carlo/run2_BlockBootstrap5_10000.json`.
+
+| | 5th pct | Median | 95th pct | 99th pct | Worst |
+|---|---|---|---|---|---|
+| Net profit | **−9.95** | +244.99 | +465.56 | +538.31 | **−453.33** |
+| Profit factor | 0.96 | 2.71 | 13.83 | 94.62 | 0.26 |
+| Max drawdown | 21.46 (0.21%) | **88.17 (0.85%)** | **184.61 (1.82%)** | 247.96 (2.46%) | 453.33 (4.53%) |
+
+- Probability profitable: **94.4%** (Bootstrap: 99.7%). Risk of ruin: 0%.
+- Average of the worst 5% of outcomes (CVaR 95): **−77.84**.
+- Median return / median drawdown ≈ **2.8** — still above Kevin's 2.
+- The actual closed-trade drawdown (107.08) sits around the **75th percentile** here, so
+  this run fits reality better than Bootstrap. **Use run 2's drawdowns for planning.**
+
+Open-trade drawdown in the real backtest was ~1.5× the closed-trade drawdown (166.52 vs
+107.08; no stop loss), so at 0.01 lot plan for roughly **3–4%** in a bad stretch, not
+1.8%. Scale ×10 at 0.1 lot.
