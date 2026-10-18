@@ -275,3 +275,35 @@ not proven enough for real money.
 made *after* seeing the walk-forward results. Kevin calls that cheating — all 2020–2026
 data has now been used for decisions, so any such version can only be validated on
 **new** data (incubation), not by another backtest of these years.
+
+## Monte Carlo (cTrader 5.10+, Monte Carlo tab)
+
+Base backtest: final setting (MA 20, 2.5 × ATR(7), Max Bars 0), 1 Jan 2024 – 16 Oct 2026 —
+49 trades, +238.51, profit factor 2.57, identical to the walk-forward out-of-sample
+trades. Files in `monte-carlo/`. All runs: Ruin Floor 9,000 (−10%), Seed 1, starting
+equity 10,000.
+
+### Run 1: Bootstrap, 10,000 iterations
+
+Trades drawn at random with replacement (closest to Kevin's spreadsheet).
+File: `monte-carlo/run1_Bootstrap_10000.json`.
+
+| | 5th pct | Median | 95th pct | 99th pct | Worst |
+|---|---|---|---|---|---|
+| Net profit | +96.94 | +241.29 | +371.37 | +424.39 | −73.01 |
+| Profit factor | 1.42 | 2.62 | 5.68 | 8.70 | 0.78 |
+| Max drawdown | 20.12 (0.20%) | 40.83 (0.40%) | 82.98 (0.82%) | 108.74 (1.08%) | 187.82 (1.85%) |
+
+- Probability profitable: **99.7%**. Risk of ruin: **0%**.
+- Median return / median drawdown ≈ **5.9** (Kevin looks for > 2).
+- The actual backtest's profit sits at the **49th percentile** — a typical result, not a
+  lucky one.
+
+**Caveat — drawdowns are understated.** The actual closed-trade drawdown was **107.08**,
+beyond this run's 95th percentile and close to its 99th. Bootstrap draws trades
+independently and breaks up losing streaks; the real losses clustered (5 losing longs in
+a row in 2026). Monte Carlo also uses closed trades only, while the backtest's open-trade
+equity drawdown was 166.52 (1.61%), and with no stop loss that gap can be large.
+
+All figures are for 0.01 lot with up to 5 positions open; dollar and percentage figures
+scale with trade size (×10 at 0.1 lot).
