@@ -158,7 +158,8 @@ the following year. Files in `walk-forward/`.
 |---|---|---|---|---|
 | 1 | 2020–2023 | MA 20, 2.5 × ATR(7), Max Bars 30 | 2024 | +84.65 (21 trades) |
 | 2 | 2021–2024 | MA 20, 2.5 × ATR(7), **Max Bars 0** | 2025 | **+205.14 (15 trades)** |
-| 3 | 2022–2025 | *to do* | 2026 | |
+| 3 | 2022–2025 | MA 20, 2.5 × ATR(7), Max Bars 0 | 2026 (to 16 Oct) | **−51.58 (13 trades)** |
+| **Total** | | | **2024 – 16 Oct 2026** | **+238.21 (49 trades), 2 of 3 years profitable** |
 
 Window 1's 2024 figure is the 2024 year of the out-of-sample run above (same parameters).
 
@@ -197,3 +198,80 @@ Multiple, Max Concurrent 5, stop loss off, Exit On MA Cross on.
 - **Many settings were optimized at once** (7, 765 runs). Kevin warns that every extra
   optimized setting adds room for overfitting. Window 3 is a cleaner test with only MA
   Length and ATR Multiple optimized, and the rest fixed.
+
+### Window 3: optimize 2022–2025, test 2026
+
+Optimization: 204 runs over 1 Jan 2022 – 31 Dec 2025, optimizing MA Length (5–20), ATR
+Multiple (1.5–2.5) and ATR Period (1–19). Fixed: AtrMultiple mode, Position Mode
+Multiple, Max Concurrent 5, Max Bars 0, stop loss off. All runs listed in
+`walk-forward/window3_opt-2022-2025_test-2026/optimization_2022-2025_all-runs.txt`.
+
+Chosen setting (run 158): **MA 20, 2.5 × ATR(7), Max Bars 0** — the same as window 2, and
+the same entry as window 1.
+
+| Metric | In-sample 2022–2025 | Test 2026 (1 Jan – 16 Oct) |
+|---|---|---|
+| Net profit | +712.14 | **−51.58** |
+| Net profit per year | +178.04 | −51.58 (in 9.5 months) |
+| Profit factor | **9.23** | **0.53** |
+| Trades | 75 (18.8 / year) | 13 |
+| Win rate | 83% (62/75) | 46% (6/13) |
+| Average trade | +9.50 | −3.97 |
+| Largest losing trade | −14.34 | **−30.61** |
+| Max consecutive losses | 5 | 5 |
+| Max equity drawdown | 1.19% (120.56) | **1.66% (166.52)** |
+| Swaps | −149.36 | −46.85 |
+
+2026 long vs short: longs **−98.94** (9 trades, 2 won, profit factor 0.09, swaps −46.36);
+shorts +47.36 (4 trades, all won). Every 2026 loss was a long.
+Trades closed by month: Feb 1, Mar 2, Jul 2, Aug 3, Oct 5.
+
+Neighbours in the 2022–2025 optimization (net / profit factor / trades):
+
+| | ATR × 1.5 | ATR × 2.0 | ATR × 2.5 |
+|---|---|---|---|
+| MA 5 | 15.72 / 1.26 / 20 | 10.01 / 2.35 / 3 | 0 trades |
+| MA 10 | 427.64 / 2.57 / 121 | 281.09 / 9.73 / 41 | 30.94 / 4.87 / 7 |
+| MA 15 | 229.19 / 1.28 / 178 | — | 360.79 / 8.41 / 39 |
+| MA 20 | 88.87 / 1.09 / 183 | 577.65 / 2.47 / 127 | **712.14 / 9.23 / 75** |
+
+(ATR Period 7. MA 15 × 2.0 at period 7 was not in the run list.) At MA 20 × 2.5, every
+ATR Period from 4 to 19 made +552 to +712 with profit factor 5–12: a broad plateau on ATR
+Period.
+
+**Read:**
+
+- **Profit factor 9.23 in-sample is a warning, not a strength.** It is far above the
+  2.79 and 3.70 of the earlier windows, because 2022–2025 contains the all-winning 2025.
+  Results that good usually don't survive, and 2026 didn't.
+- **The setting is at the top edge of both optimized ranges** (MA 20 of 5–20, ATR 2.5 of
+  1.5–2.5), so the true best area may lie beyond what was tested.
+- **The 2026 loss is entirely longs.** Longs have been weak out-of-sample in every
+  window, and swaps make them worse.
+- The 2026 drawdown (1.66%) is the worst of the whole out-of-sample period, but small, and
+  the largest loss (−30.61) is about twice the in-sample largest.
+
+## Walk-forward summary
+
+| Test year | Window | Net | Trades |
+|---|---|---|---|
+| 2024 | 1 | +84.65 | 21 |
+| 2025 | 2 | +205.14 | 15 |
+| 2026 (to 16 Oct) | 3 | −51.58 | 13 |
+| **Total** | | **+238.21** | **49** |
+
+- Out-of-sample profit per year ≈ **+85**, versus an average in-sample rate of ≈ **+139**
+  per year across the three windows: about **62%** kept. A common rule of thumb looks for
+  at least ~50%.
+- The optimizer chose **the same setting in all three windows**. That stability is the
+  strongest evidence so far that this isn't pure curve-fitting.
+- But the out-of-sample record is small (49 trades), carried by shorts, and the most
+  recent year lost money.
+
+**Verdict:** a qualified pass. Promising enough for Monte Carlo and demo incubation,
+not proven enough for real money.
+
+**Careful with "fixes":** dropping longs, or adding a filter for them, would be a change
+made *after* seeing the walk-forward results. Kevin calls that cheating — all 2020–2026
+data has now been used for decisions, so any such version can only be validated on
+**new** data (incubation), not by another backtest of these years.
