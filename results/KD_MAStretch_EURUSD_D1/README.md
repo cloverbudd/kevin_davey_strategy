@@ -328,3 +328,49 @@ File: `monte-carlo/run2_BlockBootstrap5_10000.json`.
 Open-trade drawdown in the real backtest was ~1.5× the closed-trade drawdown (166.52 vs
 107.08; no stop loss), so at 0.01 lot plan for roughly **3–4%** in a bad stretch, not
 1.8%. Scale ×10 at 0.1 lot.
+
+### Run 3: SyntheticPricePath, 1,000 iterations
+
+Shuffles historical daily price returns into new synthetic price paths and reruns the
+whole backtest on each. File: `monte-carlo/run3_SyntheticPricePath_1000.json`.
+
+| | 5th pct | Median | 95th pct | 99th pct | Worst |
+|---|---|---|---|---|---|
+| Net profit | **−483.35** | **+42.57** | +426.48 | +544.06 | **−1,357.01** |
+| Profit factor | 0.31 | **1.13** | 6.13 | 16.96 | 0.09 |
+| Max drawdown | 121.07 (1.20%) | **284.90 (2.81%)** | **694.73 (6.90%)** | 909.09 (8.97%) | 1,385.52 (13.82%) |
+
+- Mean net profit **+8.66** — about break-even. Probability profitable **55.8%**.
+  Risk of ruin (−10%) **0.3%**. CVaR 95: −666.80.
+- The actual backtest's profit sits at the **81st percentile**.
+
+**Read:** shuffling returns removes the price behaviour the strategy trades (price
+snapping back toward its average). On paths without it, the strategy breaks even with
+large swings — consistent with its profits coming from real mean reversion in EURUSD.
+As a significance check, the real result beats ~81% of no-pattern paths: suggestive of
+a real edge, but not strong evidence (you'd want ~95%+), and 49 trades is a small base.
+It also shows the "edge stopped working" case: roughly break-even, drawdowns ~3%
+typical and 7–9% in bad cases at 0.01 lot.
+
+### Monte Carlo verdict
+
+| Test | Result |
+|---|---|
+| Bootstrap | Pass, but drawdowns too optimistic |
+| BlockBootstrap | **Pass** — return/drawdown 2.8, 94% profitable; use its drawdowns for planning |
+| SyntheticPricePath | Edge shows (81st percentile) but isn't proven |
+
+Together with the walk-forward: **good enough for incubation, not yet for real money.**
+
+## Incubation plan
+
+- Run MA 20, 2.5 × ATR(7), Max Bars 0 (the saved final parameter set) **unchanged** on a
+  cTrader **demo** account, EURUSD D1, for **at least 6 months** (~18 trades a year).
+- Expect: profit factor above ~1.3, about 1.5 trades a month, drawdown under ~2%.
+- **Keep going** while drawdown stays within ~run 2's 95th percentile — about **2.8%
+  at 0.01 lot** including open-trade swings (1.82% closed × ~1.5).
+- **Stop and re-evaluate** past run 2's worst case — about **4.5% closed-trade, ~7%
+  including open trades** at 0.01 lot. That points to run 3's "edge stopped working"
+  picture.
+- Scale all limits with size (×10 at 0.1 lot). No changes during incubation; any change
+  restarts it.
